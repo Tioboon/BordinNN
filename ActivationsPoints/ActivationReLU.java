@@ -2,15 +2,16 @@ package BordinNN.ActivationsPoints;
 
 import BordinNN.InputBatch;
 import BordinNN.InputForNeurons;
+import BordinNN.VectorResultNeuron;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class ActivationReLU {
 
-    public InputBatch outPut;
+    public VectorResultNeuron outPut;
 
-    public ActivationReLU(InputBatch batch){
+    public void ForWard(InputBatch batch){
         //Create new inputList
         List<InputForNeurons> inputForNeurons = new ArrayList<>();
         //For each input on batch
@@ -25,6 +26,7 @@ public class ActivationReLU {
             inputForNeurons.add(new InputForNeurons(values));
         }
         //Set output from activation
-        outPut = new InputBatch(inputForNeurons);
+        InputBatch outPut = new InputBatch(inputForNeurons);
+        this.outPut = new VectorResultNeuron(outPut);
     }
 }

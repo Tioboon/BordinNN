@@ -1,5 +1,6 @@
 package BordinNN;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class InputBatch {
@@ -9,4 +10,5 @@ public class InputBatch {
     public InputBatch(List<InputForNeurons> inputListForNeuron){
         inputBatchList = inputListForNeuron;
     }
+
 }

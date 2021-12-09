@@ -11,6 +11,7 @@ public class InputForNeurons {
      */
     public List<Double> inputList;
 
+
     //Create new random input list, used to initialize the list for tests
     public InputForNeurons(int size){
         inputList = new ArrayList<>();

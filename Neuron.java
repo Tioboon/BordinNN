@@ -21,6 +21,13 @@ public class Neuron {
         return result;
     }
 
+    public Neuron Copy(){
+        Neuron newNeuron = new Neuron(weights.size());
+        newNeuron.weights = weights;
+        newNeuron.bias = bias;
+        return newNeuron;
+    }
+
     //Randomly initialize this neuron weights and bias
     public Neuron(int nOfInputs){
         /*
@@ -47,4 +54,5 @@ public class Neuron {
         //The bias can't be zero!! Otherwise the neuron will be somekind "off";
         if(bias == 0) bias = (negative) ? -0.01f : 0.01f;
     }
+
 }

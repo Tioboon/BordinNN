@@ -2,6 +2,7 @@ package BordinNN.ActivationsPoints;
 
 import BordinNN.InputBatch;
 import BordinNN.InputForNeurons;
+import BordinNN.VectorResultNeuron;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -9,7 +10,7 @@ import java.util.List;
 
 public class ActivationSoftMax {
 
-    public InputBatch outPut;
+    public VectorResultNeuron outPut;
 
     //A type of normalization function, better than ReLU because never reaches  0;
     public ActivationSoftMax(InputBatch batch){
@@ -17,7 +18,21 @@ public class ActivationSoftMax {
         InputBatch subtractedBatch = SubtractFromHighest(batch);
         InputBatch eulerBatch = ExponentialWithEuler(subtractedBatch);
         InputBatch normalizedEulerBatch = NormalizeAfterEuler(eulerBatch);
-        outPut = normalizedEulerBatch;
+        InputBatch outPut = normalizedEulerBatch;
+        this.outPut = new VectorResultNeuron(outPut);
+    }
+
+    public ActivationSoftMax(){
+
+    }
+
+    public void ForWard(InputBatch batch){
+        //Create some infoHolders
+        InputBatch subtractedBatch = SubtractFromHighest(batch);
+        InputBatch eulerBatch = ExponentialWithEuler(subtractedBatch);
+        InputBatch normalizedEulerBatch = NormalizeAfterEuler(eulerBatch);
+        InputBatch outPut = normalizedEulerBatch;
+        this.outPut = new VectorResultNeuron(outPut);
     }
 
     private static InputBatch ExponentialWithEuler(InputBatch batch){
