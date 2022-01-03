@@ -1,80 +1,87 @@
 package BordinNN.ActivationsPoints;
 
-import BordinNN.InputBatch;
-import BordinNN.InputForNeurons;
-import BordinNN.VectorResultNeuron;
+import BordinNN.MathHelper;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class ActivationSoftMax {
+public class ActivationSoftMax implements ActivationI {
 
-    public VectorResultNeuron outPut;
+    public List<List<Double>> output;
+    public List<List<Double>> d;
 
-    //A type of normalization function, better than ReLU because never reaches  0;
-    public ActivationSoftMax(InputBatch batch){
+    @Override
+    public List<List<Double>> Forward(List<List<Double>> layerOutput) {
         //Create some infoHolders
-        InputBatch subtractedBatch = SubtractFromHighest(batch);
-        InputBatch eulerBatch = ExponentialWithEuler(subtractedBatch);
-        InputBatch normalizedEulerBatch = NormalizeAfterEuler(eulerBatch);
-        InputBatch outPut = normalizedEulerBatch;
-        this.outPut = new VectorResultNeuron(outPut);
+        List<List<Double>> subtractedInputBatch = SubtractFromHighest(layerOutput);
+        List<List<Double>> eulerInputBatch = ExponentialWithEuler(subtractedInputBatch);
+        List<List<Double>> normalizedEulerInputBatch = NormalizeAfterEuler(eulerInputBatch);
+        output = normalizedEulerInputBatch;
+
+        return output;
     }
 
-    public ActivationSoftMax(){
+    @Override
+    public List<List<Double>> Backward(List<List<Double>> dValue) {
+        List<List<Double>> identity = MathHelper.IdentityMatrix(output.get(0).size());
+        List<List<Double>> diagFlat = MathHelper.MultiplyMatrices(output, identity);
 
-    }
+        List<List<Double>> dotOutput = MathHelper.MultiplyMatrixRows(output, output);
 
-    public void ForWard(InputBatch batch){
-        //Create some infoHolders
-        InputBatch subtractedBatch = SubtractFromHighest(batch);
-        InputBatch eulerBatch = ExponentialWithEuler(subtractedBatch);
-        InputBatch normalizedEulerBatch = NormalizeAfterEuler(eulerBatch);
-        InputBatch outPut = normalizedEulerBatch;
-        this.outPut = new VectorResultNeuron(outPut);
-    }
+        List<List<Double>> jacobian = MathHelper.SubtractMatrices(diagFlat, dotOutput);
 
-    private static InputBatch ExponentialWithEuler(InputBatch batch){
-        List<InputForNeurons> newInputList = new ArrayList<>();
-        for (InputForNeurons input: batch.inputBatchList) {
-            List<Double> newValuesList = new ArrayList<>();
-            for (double value: input.inputList) {
-                newValuesList.add(Math.exp(value));
-            }
-            newInputList.add(new InputForNeurons(newValuesList));
+        List<List<List<Double>>> dInputsList = new ArrayList<>();
+        for (List<Double> dBatch : dValue) {
+            dInputsList.add(MathHelper.VectorByMatrix(dBatch, jacobian));
         }
-        return new InputBatch(newInputList);
+
+        List<List<Double>> dInputs = MathHelper.MatricesMean(dInputsList);
+
+        d = dInputs;
+        return dInputs;
     }
 
-    private static InputBatch NormalizeAfterEuler(InputBatch batch){
-        List<InputForNeurons> newInputList = new ArrayList<>();
-        for (InputForNeurons input: batch.inputBatchList) {
-            //Get the sum of values from the result of some layer
-            double totalValue = 0d;
-            for (double value : input.inputList) {
-                totalValue += value;
+    private static List<List<Double>> ExponentialWithEuler(List<List<Double>> input){
+        List<List<Double>> output = new ArrayList<>();
+        for (int i = 0; i < input.size(); i++) {
+            List<Double> line = new ArrayList<>();
+            for (int j = 0; j < input.get(i).size(); j++){
+                line.add(Math.exp(input.get(i).get(j)));
             }
+            output.add(line);
+        }
+
+        return output;
+    }
+
+    private static List<List<Double>> NormalizeAfterEuler(List<List<Double>> input){
+        List<List<Double>> newOutput = new ArrayList<>();
+        for (int i = 0; i < input.size(); i++) {
+            //Sum vector
+            double totalValue = MathHelper.SumVector(input.get(i));
+
+            List<Double> newLine = new ArrayList<>();
             //Then uses the sum to create a percent based value
-            List<Double> newValuesList = new ArrayList<>();
-            for (double value : input.inputList) {
-                newValuesList.add(value / totalValue);
+            for (double value : input.get(i)) {
+                newLine.add(value / totalValue);
             }
-            newInputList.add(new InputForNeurons(newValuesList));
+
+            newOutput.add(newLine);
         }
-        return new InputBatch(newInputList);
+
+        return newOutput;
     }
 
-    private static InputBatch SubtractFromHighest(InputBatch batch){
-        List<InputForNeurons> newInputList = new ArrayList<>();
-        for (InputForNeurons input: batch.inputBatchList) {
-            List<Double> newValuesList = new ArrayList<>();
-            double maxValue = Collections.max(input.inputList);
-            for (double value : input.inputList) {
-                newValuesList.add(value - maxValue);
+
+    private static List<List<Double>> SubtractFromHighest(List<List<Double>> input){
+        List<List<Double>> output = input;
+        for (int i = 0; i < input.size(); i++) {
+            Double maxValue = Collections.max(input.get(i));
+            for (int j = 0; j < input.get(i).size(); j++) {
+                output.get(i).set(j, input.get(i).get(j) - maxValue);
             }
-            newInputList.add(new InputForNeurons(newValuesList));
         }
-        return new InputBatch(newInputList);
+        return output;
     }
 }

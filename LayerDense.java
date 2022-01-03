@@ -1,42 +1,42 @@
 package BordinNN;
 
+import BordinNN.ActivationsPoints.ActivationType;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class LayerDense {
     //Bunch of neurons that resides in this hidden layer
     List<Neuron> neurons;
+    public ActivationType activationType;
 
-    public VectorResultNeuron actualNeuronVector;
-
-    public VectorResultNeuron nextNeuronVector;
-
-    public void GetOutPutByBatch(InputBatch inputBatch){
-        List<InputForNeurons> inputForNeurons = new ArrayList<>();
-        for (InputForNeurons input: inputBatch.inputBatchList) {
-            List<Double> neuronOutPut = new ArrayList<>();
-            for (Neuron neuron: neurons) {
-                neuronOutPut.add(neuron.GetResultByInput(input.inputList));
-            }
-            inputForNeurons.add(new InputForNeurons(neuronOutPut));
+    public List<List<Double>> OutputByBatch(List<List<Double>> inputBatch){
+        //Each neuron returns a list of results because we are using batches
+        List<List<Double>> layerOutput = new ArrayList<>();
+        //Each neuron
+        for (Neuron neuron: neurons) {
+            layerOutput.add(neuron.Forward(inputBatch));
         }
-        InputBatch output = new InputBatch(inputForNeurons);
-        VectorResultNeuron actualNeuronVector = new VectorResultNeuron(output);
-        this.actualNeuronVector = actualNeuronVector;
+
+        layerOutput = MathHelper.Transpose(layerOutput);
+
+        List<List<Double>> activationOutput = activationType.activationI.Forward(layerOutput);
+
+        return activationOutput;
     }
 
-    public void GetFutureOutPut(InputBatch futureBatch){
-        List<InputForNeurons> nextInputList = new ArrayList<>();
-        for (InputForNeurons input: futureBatch.inputBatchList) {
-            List<Double> neuronOutPut = new ArrayList<>();
-            for (Neuron neuron: neurons) {
-                neuronOutPut.add(neuron.GetResultByInput(input.inputList));
-            }
-            nextInputList.add(new InputForNeurons(neuronOutPut));
+
+    //Create new random input list, used to initialize the list for tests
+    public List<Double> NewRandomInputList(int size){
+        List<Double> inputList = new ArrayList<>();
+        Random rndUtil = new Random();
+        for (int i = 0; i < size; i++){
+            boolean negative = rndUtil.nextBoolean();
+            double value = (negative) ? -Math.random() : Math.random();
+            inputList.add(value);
         }
-        InputBatch nextOutPut = new InputBatch(nextInputList);
-        VectorResultNeuron nextResultNeuron = new VectorResultNeuron(nextOutPut);
-        this.nextNeuronVector = nextResultNeuron;
+        return inputList;
     }
 
     public LayerDense Copy(){
@@ -47,40 +47,16 @@ public class LayerDense {
         return new LayerDense(copiedNeurons);
     }
 
-    //Don't work very well
-    public void TweakValues(Slope slope) {
-        for(int i = 0; i < slope.derivativeOutPut.inputBatchList.size(); i++){
-            for (int j = 0; j < slope.derivativeOutPut.inputBatchList.get(0).inputList.size(); j++) {
-                for(int k = 0; k < neurons.get(j).weights.size(); k++){
-                    neurons.get(j).weights.set(k,
-                            neurons.get(j).weights.get(k) +
-                            .1d * MathHelper.GetRandomPositiveOrNegative(
-                                    slope.derivativeOutPut.inputBatchList.get(i).inputList.get(j)
-                            )
-                    );
-                }
-            }
-        }
-
-        for(int i = 0; i < slope.derivativeOutPut.inputBatchList.size(); i++){
-            for (int j = 0; j < slope.derivativeOutPut.inputBatchList.get(0).inputList.size(); j++) {
-                    neurons.get(j).bias = neurons.get(j).bias +
-                            .01d * MathHelper.GetRandomPositiveOrNegative(
-                                    slope.bVariableOutPut.inputBatchList.get(i).inputList.get(j)
-                            );
-            }
-        }
-    }
-
 
     public LayerDense(List<Neuron> neurons){
         this.neurons = neurons;
     }
 
-    public LayerDense(List<InputForNeurons> input, int nOfNeurons){
+    public LayerDense(int nOfInputs, int nOfNeurons, ActivationType name){
         neurons = new ArrayList<>(nOfNeurons);
         for (int i = 0; i < nOfNeurons; i++){
-            neurons.add(new Neuron(input.size()));
+            neurons.add(new Neuron(nOfInputs));
         }
+        this.activationType = name;
     }
 }

@@ -1,32 +1,45 @@
 package BordinNN.ActivationsPoints;
 
-import BordinNN.InputBatch;
-import BordinNN.InputForNeurons;
-import BordinNN.VectorResultNeuron;
+import BordinNN.ForwardI;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ActivationReLU {
+public class ActivationReLU implements ActivationI {
 
-    public VectorResultNeuron outPut;
+    public List<List<Double>> output;
+    public List<List<Double>> d;
 
-    public void ForWard(InputBatch batch){
-        //Create new inputList
-        List<InputForNeurons> inputForNeurons = new ArrayList<>();
-        //For each input on batch
-        for (InputForNeurons input: batch.inputBatchList) {
-            //Create new valueList
-            List<Double> values = new ArrayList<>();
-            //For each value
-            for (double value: input.inputList) {
-                values.add(Math.max(0, value));
+
+    @Override
+    public List<List<Double>> Forward(List<List<Double>> input) {
+        output = Calculate(input);
+        return output;
+    }
+
+    @Override
+    public List<List<Double>> Backward(List<List<Double>> finalOutput) {
+        List<List<Double>> output = new ArrayList<>();
+        for (int i = 0; i < finalOutput.size(); i++) {
+            List<Double> loss = new ArrayList<>();
+            for (double value: finalOutput.get(i)) {
+                if(value > 0 ? loss.add(1d) : loss.add(0d));
             }
-            //Add value list to input
-            inputForNeurons.add(new InputForNeurons(values));
+            output.add(loss);
         }
-        //Set output from activation
-        InputBatch outPut = new InputBatch(inputForNeurons);
-        this.outPut = new VectorResultNeuron(outPut);
+        d=output;
+        return output;
+    }
+
+    private List<List<Double>> Calculate(List<List<Double>> input){
+        List<List<Double>> newOutput = new ArrayList<>();
+        for (int i = 0; i < input.size(); i++) {
+            List<Double> line = new ArrayList<>();
+            for (double value : input.get(i)) {
+                line.add(Math.max(0, value));
+            }
+            newOutput.add(line);
+        }
+        return newOutput;
     }
 }
